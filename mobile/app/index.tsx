@@ -15,8 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/AppButton';
 import { ResultCard } from '@/components/ResultCard';
-import { API_BASE_URL, verifyQuote } from '@/lib/api';
-import { loadRecent, saveVerification } from '@/lib/storage';
+import { API_BASE_URL, getErrorMessage, verifyQuote } from '@/lib/api';
+import { clearRecent, loadRecent, saveVerification } from '@/lib/storage';
 import type { RecentVerification } from '@/lib/types';
 
 export default function HomeScreen() {
@@ -41,13 +41,9 @@ export default function HomeScreen() {
       });
     },
     onError: (err: unknown) => {
-      const message =
-        err && typeof err === 'object' && 'message' in err
-          ? String((err as { message: string }).message)
-          : 'Verification failed';
       Alert.alert(
         'Could not verify',
-        `${message}\n\nAPI: ${API_BASE_URL}\nSet EXPO_PUBLIC_API_URL if needed.`
+        `${getErrorMessage(err)}\n\nAPI: ${API_BASE_URL}`
       );
     },
   });
@@ -59,6 +55,20 @@ export default function HomeScreen() {
       return;
     }
     mutation.mutate(trimmed);
+  };
+
+  const onClearRecent = () => {
+    Alert.alert('Clear history?', 'This removes recent verifications from this device.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: async () => {
+          await clearRecent();
+          setRecent([]);
+        },
+      },
+    ]);
   };
 
   return (
@@ -104,9 +114,16 @@ export default function HomeScreen() {
                 />
               </View>
 
-              <Text className="mb-3 mt-10 font-sans-semibold text-sm uppercase tracking-wide text-slate-500">
-                Recent Verifications
-              </Text>
+              <View className="mb-3 mt-10 flex-row items-center justify-between">
+                <Text className="font-sans-semibold text-sm uppercase tracking-wide text-slate-500">
+                  Recent Verifications
+                </Text>
+                {recent.length > 0 ? (
+                  <Pressable onPress={onClearRecent} accessibilityRole="button">
+                    <Text className="font-sans-medium text-sm text-primary">Clear</Text>
+                  </Pressable>
+                ) : null}
+              </View>
               {recent.length === 0 ? (
                 <Text className="font-sans text-sm text-slate-500">
                   No verifications yet. Scan an image or paste a quote to begin.

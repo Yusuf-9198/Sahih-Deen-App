@@ -60,7 +60,6 @@ def health() -> HealthResponse:
 
 @app.post("/verify", response_model=VerifyResponse)
 def verify(body: VerifyRequest) -> VerifyResponse:
-    settings = get_settings()
     try:
         count = qdrant_store.collection_point_count()
         if not count:

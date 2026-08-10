@@ -1,0 +1,14 @@
+{
+  "name": "veritasai-monorepo",
+  "private": true,
+  "scripts": {
+    "api": "cd backend && .venv/Scripts/python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000",
+    "api:reload": "cd backend && .venv/Scripts/python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "seed": "cd backend && .venv/Scripts/python.exe -m scripts.seed_corpus --sample-only",
+    "seed:hf": "cd backend && .venv/Scripts/python.exe -m scripts.seed_corpus --limit 5000",
+    "smoke": "cd backend && .venv/Scripts/python.exe -m scripts.smoke_test",
+    "mobile": "cd mobile && npx expo start",
+    "mobile:android": "cd mobile && npx expo run:android",
+    "qdrant": "docker compose up -d"
+  }
+}
