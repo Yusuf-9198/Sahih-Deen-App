@@ -1,0 +1,28 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+.env
+.env.local
+
+# Backend
+backend/.venv/
+backend/venv/
+backend/data/qdrant/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/.env
+*.egg-info/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
