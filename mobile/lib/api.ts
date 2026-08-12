@@ -4,6 +4,15 @@ import { Platform } from 'react-native';
 
 import type { VerifyResponse } from './types';
 
+export type HealthResponse = {
+  status: string;
+  qdrant?: string;
+  collection?: string;
+  points?: number | null;
+  embedding_model?: string;
+  details?: Record<string, unknown> | null;
+};
+
 function normalizeBaseUrl(value: string): string {
   return value.replace(/\/$/, '');
 }
@@ -60,7 +69,7 @@ export async function verifyQuote(query: string): Promise<VerifyResponse> {
   return data;
 }
 
-export async function checkHealth(): Promise<{ status: string; points?: number | null }> {
+export async function checkHealth(): Promise<HealthResponse> {
   const { data } = await api.get('/health');
   return data;
 }

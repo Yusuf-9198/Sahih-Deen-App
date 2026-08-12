@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text } from 'react-native';
 
 type Props = {
   label: string;
@@ -34,6 +34,7 @@ export function AppButton({
       disabled={isDisabled}
       onPress={onPress}
       className={`${base} ${styles} ${isDisabled ? 'opacity-50' : 'opacity-100'}`}
+      style={({ pressed }) => [{ transform: [{ scale: pressed && !isDisabled ? 0.985 : 1 }] }]}
     >
       {loading ? (
         <ActivityIndicator color={variant === 'primary' ? '#0f172a' : '#10b981'} />

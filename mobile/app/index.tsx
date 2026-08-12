@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
@@ -15,19 +16,31 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/AppButton';
 import { ResultCard } from '@/components/ResultCard';
-import { API_BASE_URL, getErrorMessage, verifyQuote } from '@/lib/api';
+import { API_BASE_URL, checkHealth, getDevHostHint, getErrorMessage, verifyQuote } from '@/lib/api';
 import { clearRecent, loadRecent, saveVerification } from '@/lib/storage';
 import type { RecentVerification } from '@/lib/types';
+
+const EXAMPLES = [
+  'Actions are but by intentions.',
+  'Whoever believes in Allah and the Last Day should speak good or remain silent.',
+  'In the name of Allah, the Entirely Merciful, the Especially Merciful.',
+];
 
 export default function HomeScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [recent, setRecent] = useState<RecentVerification[]>([]);
+  const healthQuery = useQuery({
+    queryKey: ['health'],
+    queryFn: checkHealth,
+    staleTime: 60_000,
+  });
 
   useFocusEffect(
     useCallback(() => {
       loadRecent().then(setRecent);
-    }, [])
+      healthQuery.refetch();
+    }, [healthQuery.refetch])
   );
 
   const mutation = useMutation({
@@ -71,6 +84,15 @@ export default function HomeScreen() {
     ]);
   };
 
+  const status = healthQuery.data;
+  const statusLabel = healthQuery.isLoading
+    ? 'Checking backend'
+    : status
+      ? status.qdrant === 'ok'
+        ? `Backend online · ${status.points ?? 0} passages`
+        : `Backend warmup · ${status.qdrant}`
+      : 'Backend offline';
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
@@ -84,13 +106,59 @@ export default function HomeScreen() {
           keyExtractor={(item) => item.id}
           ListHeaderComponent={
             <View className="pb-6 pt-4">
-              <Text className="font-sans-bold text-3xl text-primary">VeritasAI</Text>
-              <Text className="mt-2 font-sans text-base leading-6 text-muted">
-                Verify Islamic quotes against authentic Quranic and Hadith sources.
-              </Text>
+              <View className="overflow-hidden rounded-[32px] border border-border bg-surface px-5 py-6">
+                <View className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-primary/10" />
+                <View className="absolute bottom-0 left-0 h-20 w-20 rounded-full bg-sky-500/10" />
+                <Text className="font-sans-semibold text-xs uppercase tracking-[0.35em] text-primary/80">
+                  VeritasAI
+                </Text>
+                <Text className="mt-3 max-w-[320px] font-sans-bold text-4xl leading-[44px] text-white">
+                  Verify quotes with Quran and Hadith evidence.
+                </Text>
+                <Text className="mt-3 font-sans text-base leading-7 text-muted">
+                  Paste a quote for instant analysis or use camera OCR on a development build.
+                  The backend boots with a sample corpus and can expand with internet-backed data.
+                </Text>
 
-              <View className="mt-8">
-                <AppButton label="Scan Image" onPress={() => router.push('/scan')} />
+                <View className="mt-5 flex-row flex-wrap gap-2">
+                  <View className="rounded-full border border-border bg-background/60 px-3 py-2">
+                    <Text className="font-sans-medium text-xs uppercase tracking-wide text-slate-200">
+                      {statusLabel}
+                    </Text>
+                  </View>
+                  <View className="rounded-full border border-border bg-background/60 px-3 py-2">
+                    <Text className="font-sans-medium text-xs uppercase tracking-wide text-slate-200">
+                      {status?.embedding_model ?? 'Multilingual embedding model'}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text className="mt-3 font-sans text-xs leading-5 text-slate-400">
+                  {getDevHostHint()}
+                </Text>
+
+                <View className="mt-5">
+                  <AppButton label="Scan Image" onPress={() => router.push('/scan')} />
+                </View>
+              </View>
+
+              <View className="mt-5 rounded-[28px] border border-border bg-surface px-4 py-4">
+                <Text className="mb-3 font-sans-semibold text-sm uppercase tracking-wide text-slate-500">
+                  Try an example
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {EXAMPLES.map((item) => (
+                    <Pressable
+                      key={item}
+                      onPress={() => setQuery(item)}
+                      className="rounded-full border border-border bg-background/60 px-3 py-2"
+                    >
+                      <Text className="max-w-[260px] font-sans text-xs leading-4 text-slate-200">
+                        {item}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
               </View>
 
               <Text className="mb-2 mt-8 font-sans-semibold text-sm uppercase tracking-wide text-slate-500">
@@ -103,7 +171,7 @@ export default function HomeScreen() {
                 placeholder="Paste Arabic or English quote…"
                 placeholderTextColor="#64748b"
                 textAlignVertical="top"
-                className="min-h-[120px] rounded-2xl border border-border bg-surface px-4 py-3 font-sans text-base text-white"
+                className="min-h-[140px] rounded-[28px] border border-border bg-surface px-4 py-4 font-sans text-base text-white"
               />
               <View className="mt-3">
                 <AppButton

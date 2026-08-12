@@ -171,6 +171,17 @@ def load_corpus(prefer_hf: bool = True, hf_limit: int | None = 5000) -> list[dic
     return SAMPLE_CORPUS
 
 
+def bootstrap_sample_corpus() -> int:
+    """Ensure a small working corpus exists so the API works on a fresh setup."""
+
+    count = qdrant_store.collection_point_count()
+    if count:
+        return count
+
+    print("Bootstrapping sample corpus so verification works out of the box ...")
+    return upsert_corpus(SAMPLE_CORPUS)
+
+
 def passage_text(item: dict[str, Any]) -> str:
     parts = [item.get("arabic_text") or "", item.get("english_text") or ""]
     return "\n".join(p for p in parts if p).strip()

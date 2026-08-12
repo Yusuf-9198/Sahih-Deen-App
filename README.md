@@ -1,6 +1,6 @@
 # VeritasAI
 
-Islamic quote & text fact-checker. Scan or paste a quote; the mobile app OCR-extracts text on-device, then a FastAPI backend runs RAG vector search over a verified Quran/Hadith corpus in Qdrant.
+Islamic quote & text fact-checker. Scan or paste a quote; the mobile app works in Expo Go, lets you pick or capture an image, paste the extracted text, then a FastAPI backend runs RAG vector search over a verified Quran/Hadith corpus in Qdrant.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ Mobile (Expo)  --OCR-->  POST /verify { query }  -->  FastAPI
 
 ## Repo layout
 
-- `mobile/` — Expo SDK 57, Expo Router, NativeWind, Vision Camera + ML Kit OCR
+- `mobile/` — Expo SDK 57, Expo Router, NativeWind, Expo Image Picker scan flow
 - `backend/` — FastAPI, sentence-transformers, Qdrant client, seed + smoke scripts
 - `docker-compose.yml` — Qdrant service
 
@@ -35,7 +35,7 @@ Mobile (Expo)  --OCR-->  POST /verify { query }  -->  FastAPI
 - Node 20+
 - Python 3.11–3.12 recommended (3.14 works here with current wheels)
 - Docker Desktop optional (without it, backend uses on-disk Qdrant at `backend/data/qdrant`)
-- Android Studio / Xcode for a **development build** (Vision Camera + ML Kit do **not** run in Expo Go)
+- Expo Go on Android/iOS for the mobile app
 
 ## Quick start (Windows)
 
@@ -109,16 +109,13 @@ npx expo start
 
 Set `EXPO_PUBLIC_API_URL` to your LAN IP on a physical device (e.g. `http://192.168.1.10:8000`).
 
-### OCR development build
+### Mobile scan flow
 
 ```bash
-npx expo prebuild
-npx expo run:android
-# or
-npx expo run:ios
+npx expo start
 ```
 
-Paste-text verification works without native OCR. Camera / gallery OCR needs the Dev Client build.
+Expo Go supports the main verification flow, including camera/photo-library picking on the scan screen. After choosing an image, paste the visible text into the scan field to verify it.
 
 ### Theme
 
@@ -128,14 +125,14 @@ Paste-text verification works without native OCR. Camera / gallery OCR needs the
 
 ## Notes
 
-- ML Kit Text Recognition scripts are Latin / CJK / Devanagari — **Arabic OCR is limited**. Prefer **Paste Text** for Arabic.
+- The scan screen is Expo Go-safe and uses the built-in image picker. If you need true on-device OCR later, that would require restoring a custom native build.
 - Hadith enrichment uses the [Fawaz Ahmed Hadith API](https://github.com/fawazahmed0/hadith-api) when grading/text is missing.
 - The LLM only formats differences from retrieved matches — it does not invent sources.
-- Web preview supports paste-verify; camera OCR is native-only (`scan.native.tsx`).
+- Web preview and Expo Go both use the Expo-safe scan flow; paste verification still works everywhere.
 
 ## Status & Authentication
 
-- **Status:** This project is functional for paste-based verification and includes a small sample corpus, but some features are not fully complete (native Arabic OCR, large HF corpus indexing, and mobile OCR dev builds require additional setup).
+- **Status:** This project is functional in Expo Go for paste-based verification and image-assisted scan flow, and includes a small sample corpus plus optional Hugging Face seeding.
 
 - **Required authentication / tokens:**
    - **`OPENAI_API_KEY`**: (optional) Place in `backend/.env` to enable OpenAI summaries. Without it, a deterministic local summary is used.

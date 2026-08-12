@@ -37,20 +37,12 @@
     },
     "plugins": [
       "expo-router",
-      "expo-dev-client",
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
           "backgroundColor": "#0f172a"
-        }
-      ],
-      [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "VeritasAI uses the camera to scan Islamic quotes for verification.",
-          "enableMicrophonePermission": false
         }
       ],
       [

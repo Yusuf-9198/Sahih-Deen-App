@@ -10,12 +10,18 @@ from app.models import HealthResponse, VerifyRequest, VerifyResponse
 from app.services.embeddings import get_embedder
 from app.services import qdrant_store
 from app.services.verify_service import verify_quote
+from scripts.seed_corpus import bootstrap_sample_corpus
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Warm embedding model on startup so first /verify is faster
     get_embedder()
+    try:
+        bootstrap_sample_corpus()
+    except Exception:
+        # The API should still start even if the local bootstrap cannot run.
+        pass
     yield
 
 
@@ -63,10 +69,13 @@ def verify(body: VerifyRequest) -> VerifyResponse:
     try:
         count = qdrant_store.collection_point_count()
         if not count:
-            raise HTTPException(
-                status_code=503,
-                detail="Corpus not indexed. Run: python -m scripts.seed_corpus",
-            )
+            bootstrap_sample_corpus()
+            count = qdrant_store.collection_point_count()
+            if not count:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Corpus not indexed. Run: python -m scripts.seed_corpus",
+                )
         return verify_quote(body.query)
     except HTTPException:
         raise
